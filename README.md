@@ -100,7 +100,7 @@ This project comes with a set of Python scripts located in the `api_tests` direc
     ```
 3.  Execute the script.
     ```sh
-    python 1.auth_register.py
+    python A1.auth_register.py
     ```
 4.  You will see the output in the terminal for each test, including its success or failure status.
 
