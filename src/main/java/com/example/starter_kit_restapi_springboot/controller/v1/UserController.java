@@ -35,19 +35,38 @@ public class UserController {
     @GetMapping
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<PagedResponse<UserResponse>> getUsers(
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) Role role,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false, defaultValue = "all") String scope,
+            @RequestParam(required = false) String role,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int limit,
-            @RequestParam(defaultValue = "id,asc") String[] sort) {
+            @RequestParam(defaultValue = "id:asc") String sortBy) {
         
-        String sortField = sort[0];
-        String sortDirection = sort.length > 1 ? sort[1] : "asc";
-        Sort.Direction direction = Sort.Direction.fromString(sortDirection);
-        Sort.Order order = new Sort.Order(direction, sortField);
+        // 1. Handle Sorting
+        String[] sortParts = sortBy.split(":");
+        String sortField = sortParts[0];
+        String sortDirection = sortParts.length > 1 ? sortParts[1] : "asc";
+        
+        // Map snake_case to camelCase
+        if ("created_at".equals(sortField)) sortField = "createdAt";
+        if ("updated_at".equals(sortField)) sortField = "updatedAt";
 
-        Pageable pageable = PageRequest.of(page - 1, limit, Sort.by(order));
-        return ResponseEntity.ok(userService.getAllUsers(pageable, name, role));
+        Sort.Direction direction = sortDirection.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Pageable pageable = PageRequest.of(page - 1, limit, Sort.by(direction, sortField));
+        
+        // 2. Handle Role Conversion (Case-Insensitive)
+        Role roleEnum = null;
+        if (role != null && !role.isEmpty()) {
+            try {
+                roleEnum = Role.valueOf(role.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // Invalid role string provided; treat as null or handle error.
+                // For now, we leave it as null, which means "no role filter"
+            }
+        }
+        
+        return ResponseEntity.ok(userService.getAllUsers(pageable, search, scope, roleEnum));
     }
 
     @GetMapping("/{userId}")

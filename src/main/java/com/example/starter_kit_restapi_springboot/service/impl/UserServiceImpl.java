@@ -29,9 +29,8 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public PagedResponse<UserResponse> getAllUsers(Pageable pageable, String name, Role role) {
-        Specification<User> spec = Specification.where(UserSpecification.hasName(name))
-                                                .and(UserSpecification.hasRole(role));
+    public PagedResponse<UserResponse> getAllUsers(Pageable pageable, String search, String scope, Role role) {
+        Specification<User> spec = UserSpecification.getSpecification(search, scope, role);
         
         Page<User> userPage = userRepository.findAll(spec, pageable);
         
