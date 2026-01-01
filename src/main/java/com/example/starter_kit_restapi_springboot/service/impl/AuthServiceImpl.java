@@ -5,6 +5,7 @@ import com.example.starter_kit_restapi_springboot.dto.request.LoginRequest;
 import com.example.starter_kit_restapi_springboot.dto.request.RegisterRequest;
 import com.example.starter_kit_restapi_springboot.dto.request.ResetPasswordRequest;
 import com.example.starter_kit_restapi_springboot.dto.response.AuthResponse;
+import com.example.starter_kit_restapi_springboot.dto.response.UserResponse;
 import com.example.starter_kit_restapi_springboot.entity.Role;
 import com.example.starter_kit_restapi_springboot.entity.Token;
 import com.example.starter_kit_restapi_springboot.entity.TokenType;
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.UUID;
 
 @Service
@@ -58,14 +60,7 @@ public class AuthServiceImpl implements AuthService {
                 .build();
         var savedUser = userRepository.save(user);
 
-        var accessToken = jwtService.generateToken(user);
-        var refreshToken = jwtService.generateRefreshToken(user);
-        saveUserToken(savedUser, accessToken);
-
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
+        return buildAuthResponse(savedUser);
     }
 
     @Override
@@ -81,16 +76,9 @@ public class AuthServiceImpl implements AuthService {
         var user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        var accessToken = jwtService.generateToken(user);
-        var refreshToken = jwtService.generateRefreshToken(user);
-
         tokenRepository.deleteAllBearerTokensByUserId(user.getId());
-        saveUserToken(user, accessToken);
-
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
+        
+        return buildAuthResponse(user);
     }
 
     @Override
@@ -109,18 +97,43 @@ public class AuthServiceImpl implements AuthService {
                     .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
             if (jwtService.isTokenValid(refreshToken, user)) {
-                var accessToken = jwtService.generateToken(user);
-                
                 tokenRepository.deleteAllBearerTokensByUserId(user.getId());
-                saveUserToken(user, accessToken);
                 
-                var authResponse = AuthResponse.builder()
-                        .accessToken(accessToken)
-                        .refreshToken(refreshToken)
-                        .build();
+                AuthResponse authResponse = buildAuthResponse(user);
                 new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
             }
         }
+    }
+
+    private AuthResponse buildAuthResponse(User user) {
+        var accessToken = jwtService.generateToken(user);
+        var refreshToken = jwtService.generateRefreshToken(user);
+        
+        saveUserToken(user, accessToken);
+
+        // Calculate expiration dates
+        Date accessExpiresAt = new Date(System.currentTimeMillis() + jwtService.getAccessTokenExpiration() * 60 * 1000);
+        Date refreshExpiresAt = new Date(System.currentTimeMillis() + jwtService.getRefreshTokenExpiration() * 24 * 60 * 60 * 1000);
+
+        AuthResponse.TokenDetail accessDetail = AuthResponse.TokenDetail.builder()
+                .token(accessToken)
+                .expires(accessExpiresAt)
+                .build();
+
+        AuthResponse.TokenDetail refreshDetail = AuthResponse.TokenDetail.builder()
+                .token(refreshToken)
+                .expires(refreshExpiresAt)
+                .build();
+
+        AuthResponse.TokensWrapper tokensWrapper = AuthResponse.TokensWrapper.builder()
+                .access(accessDetail)
+                .refresh(refreshDetail)
+                .build();
+
+        return AuthResponse.builder()
+                .user(UserResponse.fromUser(user))
+                .tokens(tokensWrapper)
+                .build();
     }
 
     @Override
