@@ -2,6 +2,7 @@ package com.example.starter_kit_restapi_springboot.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -35,6 +36,12 @@ public class GlobalExceptionHandler {
         return createErrorResponse(HttpStatus.FORBIDDEN, "Forbidden");
     }
 
+    // NEW: Handle JSON parsing errors (e.g., Invalid Enum value, Malformed JSON)
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+        return createErrorResponse(HttpStatus.BAD_REQUEST, "Malformed JSON request or invalid field format");
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getAllErrors().stream()
@@ -45,7 +52,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneralException(Exception ex) {
-        // Log the exception ex.printStackTrace();
+        // ex.printStackTrace(); // Log for debugging
         return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
     }
 
