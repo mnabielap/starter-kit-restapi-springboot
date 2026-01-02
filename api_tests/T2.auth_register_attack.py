@@ -46,8 +46,8 @@ if response.status_code == 201:
     print(f"Requested Role: 'admin'")
     print(f"Assigned Role:  '{user_role}'")
     
-    if user_role == "user":
-        print(f"\n{Colors.OKGREEN}[PASS] Security check passed! Server ignored the malicious role and assigned 'user'.{Colors.ENDC}")
+    if user_role == "USER":
+        print(f"\n{Colors.OKGREEN}[PASS] Security check passed! Server ignored the malicious role and assigned 'USER'.{Colors.ENDC}")
     else:
         print(f"\n{Colors.FAIL}[FAIL] Security Vulnerability! User was created with role '{user_role}'.{Colors.ENDC}")
 

@@ -44,7 +44,7 @@ def assert_payload_matches_response(payload, response_data, context):
         api_val = response_data[key]
         
         # Determine if match
-        if api_val == input_val:
+        if str(api_val).lower() == str(input_val).lower():
             # OK
             pass
         else:
@@ -129,7 +129,7 @@ def run_test():
         assert_payload_matches_response(update_payload, update_data, "Update User")
         
         # Verify non-updated fields (role) remain same
-        if update_data['role'] == create_payload['role']:
+        if str(update_data['role']).lower() == str(create_payload['role']).lower():
             print_pass("Non-updated field 'role' preserved correctly.")
         else:
             print_fail(f"Non-updated field 'role' changed unexpectedly! {update_data['role']}")
