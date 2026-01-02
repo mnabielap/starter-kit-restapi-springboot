@@ -3,12 +3,14 @@ import os
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from utils import send_and_print, BASE_URL
 
-print("--- FORGOT PASSWORD ---")
+print("--- RESET PASSWORD ---")
 
-url = f"{BASE_URL}/auth/forgot-password"
+mock_token = "PUT_VALID_TOKEN_HERE_FROM_LOGS" 
+
+url = f"{BASE_URL}/auth/reset-password?token={mock_token}"
 
 payload = {
-    "email": "admin@example.com"
+    "password": "newpassword123"
 }
 
 response = send_and_print(
