@@ -26,6 +26,7 @@ Welcome to the Spring Boot REST API Starter Kit! 🚀 This project provides a so
 -   **Documentation**: Springdoc OpenAPI
 -   **Deployment**: Docker
 -   **Utilities**: Lombok
+-   **Testing**: JUnit 5, Mockito, and JaCoCo
 
 ---
 
@@ -84,6 +85,16 @@ We recommend running this project in your local development environment first to
 5.  **Access the Application**
     -   🎉 Your application is now running at `http://localhost:3000`.
     -   The API documentation (Swagger UI) is available at: `http://localhost:3000/v1/docs`.
+
+#### Run the Java Tests
+
+You can run the Java test suite and coverage check with:
+
+```sh
+mvn test
+```
+
+JaCoCo is configured during the Maven test phase and currently enforces **100% line coverage** for the Java codebase.
 
 ---
 
@@ -227,3 +238,5 @@ docker volume ls
 ```sh
 docker volume rm restapi_springboot_db_volume
 ```
+
+---
